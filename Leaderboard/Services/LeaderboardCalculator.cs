@@ -1,5 +1,6 @@
 ﻿using Leaderboard.Models;
 
+// ReSharper disable once InvalidXmlDocComment
 /**
  * ТРЕБОВАНИЕ:
  *
@@ -44,8 +45,54 @@ namespace Leaderboard.Services
     {
         public IEnumerable<UserWithPlace> CalculatePlaces(IEnumerable<IUserWithScore> usersWithScores, LeaderboardMinScores leaderboardMinScores)
         {
-            // TODO: implement code here
-            throw new NotImplementedException();
+            var leaderBoard = new Dictionary<int, IUserWithScore>();
+
+            foreach (var user in usersWithScores)
+            {
+                if (user.Score >= leaderboardMinScores.FirstPlaceMinScore)
+                {
+                    TakePlace(1, user, leaderBoard);
+                }
+                else if (user.Score >= leaderboardMinScores.SecondPlaceMinScore)
+                {
+                    TakePlace(2, user, leaderBoard);
+                }
+                else if (user.Score >= leaderboardMinScores.ThirdPlaceMinScore)
+                {
+                    TakePlace(3, user, leaderBoard);
+                }
+                else
+                {
+                    TakePlace(4, user, leaderBoard);
+                }
+            }
+
+            return leaderBoard
+                .Select(p => new UserWithPlace(p.Value.UserId, p.Key));
+        }
+
+        private static void TakePlace(int place, IUserWithScore user, IDictionary<int, IUserWithScore> leaderBoard)
+        {
+            while (true)
+            {
+                if (leaderBoard.TryGetValue(place, out var u))
+                {
+                    if (u.Score < user.Score)
+                    {
+                        TakePlace(place + 1, u, leaderBoard);
+                        leaderBoard[place] = user;
+                    }
+                    else
+                    {
+                        place += 1;
+                        continue;
+                    }
+                }
+                else
+                    leaderBoard.Add(place, user);
+
+                break;
+            }
         }
     }
 }
